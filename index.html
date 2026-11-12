@@ -844,7 +844,7 @@
           },
           {
             id: 'cross_machine_croci_meta',
-            name: 'Croci ai Cavi dall'alto (Cross Machine)',
+            name: 'Croci ai Cavi dall\'alto (Cross Machine)',
             muscle: 'Petto',
             note: 'Contrazione di picco',
             sets: [
@@ -1571,7 +1571,7 @@
 
     function slugifyExerciseId(name) {
       return name.toLowerCase()
-        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '') || ('ex_' + Date.now());
     }
@@ -1653,7 +1653,7 @@
       closeBuilderModal();
       renderWorkoutView();
       if (state.activeTab === 'templates') renderTemplatesView();
-      showToast('Scheda salvata e pronta all'uso!', '✅');
+      showToast('Scheda salvata e pronta all\'uso!', '✅');
     }
 
     // =========================================================================
@@ -1717,7 +1717,7 @@
       }
       showConfirm(
         'Elimina seduta dalla scheda?',
-        'La seduta verrà rimossa dall'elenco (lo storico già salvato resterà intatto).',
+        'La seduta verrà rimossa dall\'elenco (lo storico già salvato resterà intatto).',
         () => {
           delete state.templates[tplId];
           delete state.drafts[tplId];
