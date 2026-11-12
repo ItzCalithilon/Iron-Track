@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="IronTrack" />
+  <meta name="theme-color" content="#09090b" />
+  <title>IronTrack iOS — Scheda & Progressi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            iosBg: '#09090b',
+            iosCard: '#141417',
+            iosCardHover: '#1c1c21',
+            iosBorder: '#27272a',
+            iosBlue: '#0a84ff',
+            iosGreen: '#30d158',
+            iosOrange: '#ff9f0a',
+            iosRed: '#ff453a',
+            iosPurple: '#bf5af2',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overscroll-behavior-y: none;
+      padding-top: var(--sat);
+      padding-bottom: calc(82px + var(--sab));
+      margin: 0;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    input[type="number"], input[type="text"], select {
+      font-size: 16px !important;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .ios-blur {
+      background: rgba(20, 20, 23, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .tab-bar {
+      padding-bottom: calc(8px + var(--sab));
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-iosBlue selection:text-white">
+
+  <!-- Toast / Notifica iOS non bloccante -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-4" style="margin-top: var(--sat);">
+    <div id="toast-inner" class="px-4 py-2.5 rounded-full bg-zinc-800/95 border border-zinc-700 shadow-2xl text-sm font-semibold text-white flex items-center gap-2">
+      <span id="toast-icon">✅</span>
+      <span id="toast-msg">Salvato</span>
+    </div>
+  </div>
+
+  <!-- Modal Conferma Custom -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-5">
+    <div class="bg-iosCard border border-iosBorder rounded-3xl max-w-sm w-full p-6 shadow-2xl">
+      <h3 id="confirm-title" class="text-lg font-bold text-white mb-2">Conferma azione</h3>
+      <p id="confirm-desc" class="text-sm text-zinc-400 mb-6 leading-relaxed">Sei sicuro di voler procedere?</p>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="confirm-cancel" class="py-3 px-4 rounded-2xl bg-zinc-800 text-zinc-200 font-semibold text-sm active:scale-95 transition">Annulla</button>
+        <button id="confirm-ok" class="py-3 px-4 rounded-2xl bg-iosRed text-white font-semibold text-sm active:scale-95 transition">Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Istruzioni Aggiungi a Home iPhone -->
+  <div id="pwa-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-iosCard border border-iosBorder rounded-3xl max-w-md w-full p-6 shadow-2xl mb-2">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span>📲</span> Installa su iPhone
+        </h3>
+        <button onclick="closePwaModal()" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-bold">✕</button>
+      </div>
+      <p class="text-sm text-zinc-300 mb-4 leading-relaxed">
+        Puoi usare questa web app a schermo intero come una vera app iOS senza barra di Safari:
+      </p>
+      <ol class="text-sm text-zinc-300 space-y-3 mb-5 bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800">
+        <li class="flex items-start gap-2.5">
+          <span class="bg-iosBlue text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">1</span>
+          <span>Apri questa pagina in <strong>Safari</strong> su iPhone.</span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="bg-iosBlue text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">2</span>
+          <span>Tocca il pulsante <strong>Condividi</strong> (quadrato con freccia in alto) in basso al centro.</span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="bg-iosBlue text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">3</span>
+          <span>Scorri e tocca <strong>"Aggiungi alla schermata Home"</strong>.</span>
+        </li>
+      </ol>
+      <button onclick="closePwaModal()" class="w-full py-3.5 rounded-2xl bg-iosBlue text-white font-semibold text-sm active:scale-95 transition">Ho capito</button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL CREA / MODIFICA SCHEDA PERSONALIZZATA               -->
+  <!-- ========================================================= -->
+  <div id="builder-modal" class="fixed inset-0 z-50 hidden flex-col bg-iosBg overflow-y-auto" style="padding-top: var(--sat); padding-bottom: calc(24px + var(--sab));">
+    <div class="max-w-lg mx-auto w-full px-4 pt-3 pb-10">
+      <!-- Header Modal -->
+      <div class="flex items-center justify-between mb-5 sticky top-0 bg-iosBg/95 backdrop-blur-md py-2 z-10 border-b border-zinc-900">
+        <button onclick="closeBuilderModal()" class="text-sm font-semibold text-zinc-400 hover:text-white px-2 py-1">Annulla</button>
+        <h2 id="builder-modal-title" class="text-base font-extrabold text-white">Nuova Seduta</h2>
+        <button onclick="saveCustomTemplate()" class="text-sm font-extrabold text-iosBlue hover:text-blue-400 px-2 py-1">Salva</button>
+      </div>
+
+      <!-- Dati Principali Seduta -->
+      <div class="bg-iosCard border border-iosBorder rounded-3xl p-4 mb-4 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Palestra di destinazione</label>
+          <div class="grid grid-cols-2 gap-2 bg-zinc-950 p-1.5 rounded-2xl border border-zinc-800">
+            <button type="button" id="builder-gym-caserma" onclick="setBuilderGym('caserma')" class="py-2 rounded-xl text-xs font-bold bg-iosBlue text-white transition">🎖️ Caserma</button>
+            <button type="button" id="builder-gym-metamorfosis" onclick="setBuilderGym('metamorfosis')" class="py-2 rounded-xl text-xs font-bold text-zinc-400 transition">⚡ Metamorfosis</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="col-span-1">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Codice</label>
+            <input id="builder-code" type="text" maxlength="6" placeholder="Es. C1" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-3 py-2.5 text-white font-bold text-center uppercase focus:outline-none focus:border-iosBlue" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Nome Seduta</label>
+            <input id="builder-name" type="text" placeholder="Es. Gambe & Addome" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-3.5 py-2.5 text-white font-semibold focus:outline-none focus:border-iosBlue" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Sottotitolo / Focus</label>
+          <input id="builder-sub" type="text" placeholder="Es. Quadricipiti 8 set • Femorali 6 set" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-iosBlue" />
+        </div>
+      </div>
+
+      <!-- Lista Esercizi del Builder -->
+      <div class="flex items-center justify-between mb-2.5 px-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Esercizi della Seduta</span>
+        <span id="builder-ex-count" class="text-xs font-semibold text-iosBlue">0 esercizi</span>
+      </div>
+
+      <div id="builder-exercises-list" class="space-y-3 mb-4">
+        <!-- Popolato dinamicamente via JS -->
+      </div>
+
+      <button type="button" onclick="addBuilderExercise()" class="w-full py-3.5 rounded-2xl bg-zinc-900 border border-dashed border-zinc-700 text-iosBlue font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition mb-6">
+        <span>➕</span> Aggiungi Esercizio
+      </button>
+
+      <button type="button" onclick="saveCustomTemplate()" class="w-full py-4 rounded-2xl bg-iosGreen text-black font-extrabold text-base shadow-lg shadow-iosGreen/20 active:scale-95 transition">
+        💾 Salva Seduta nella Scheda
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra Timer Recupero Fluttuante -->
+  <div id="timer-bar" class="fixed left-3 right-3 z-40 hidden transition-all duration-300" style="bottom: calc(78px + var(--sab));">
+    <div class="ios-blur border border-zinc-700/80 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-iosBlue/20 text-iosBlue flex items-center justify-center font-bold text-sm">⏱️</div>
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Recupero</div>
+          <div id="timer-display" class="text-xl font-extrabold text-white tabular-nums leading-none mt-0.5">01:30</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button onclick="adjustTimer(-15)" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-bold active:scale-95">-15s</button>
+        <button onclick="adjustTimer(15)" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-bold active:scale-95">+15s</button>
+        <button onclick="stopTimer()" class="px-3 py-1.5 rounded-xl bg-iosRed/20 text-iosRed text-xs font-bold active:scale-95 ml-1">Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- VISTA 1: ALLENAMENTO ODIERNO (LOGGING)                    -->
+  <!-- ========================================================= -->
+  <main id="view-workout" class="max-w-lg mx-auto px-4 pt-3">
+    <!-- Header App -->
+    <header class="flex items-center justify-between mb-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-extrabold tracking-tight text-white">IronTrack</h1>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-iosBlue/20 text-iosBlue border border-iosBlue/30">PRO</span>
+        </div>
+        <p id="today-date-label" class="text-xs text-zinc-400 font-medium mt-0.5"></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openBuilderModal()" title="Crea nuova seduta" class="px-3 py-2 rounded-2xl bg-iosBlue/15 border border-iosBlue/30 text-iosBlue text-xs font-bold flex items-center gap-1 active:scale-95 transition">
+          <span>＋</span> Nuova Scheda
+        </button>
+        <button onclick="openPwaModal()" title="Installa su iPhone" class="p-2.5 rounded-2xl bg-iosCard border border-iosBorder text-zinc-300 active:scale-95 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Selettore Palestra (Segmented Control iOS) -->
+    <section class="bg-iosCard border border-iosBorder rounded-3xl p-3.5 mb-4 shadow-lg">
+      <div class="flex items-center justify-between mb-2 px-1">
+        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Dove ti alleni oggi?</span>
+        <span id="gym-badge-hint" class="text-[11px] font-medium text-iosBlue">Pesi Liberi</span>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5 bg-zinc-950 p-1.5 rounded-2xl border border-zinc-800/80 mb-3.5">
+        <button id="btn-gym-caserma" onclick="setGym('caserma')" class="py-2.5 px-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-iosBlue text-white shadow">
+          <span>🎖️</span> Caserma
+        </button>
+        <button id="btn-gym-metamorfosis" onclick="setGym('metamorfosis')" class="py-2.5 px-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 text-zinc-400 hover:text-white">
+          <span>⚡</span> Metamorfosis
+        </button>
+      </div>
+
+      <!-- Selettore Seduta / Giorno -->
+      <div class="flex items-center justify-between mb-2 px-1">
+        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Seleziona Seduta</span>
+        <span id="session-sets-summary" class="text-[11px] font-semibold text-zinc-400">18 set totali</span>
+      </div>
+      <div id="session-selector" class="grid grid-cols-4 gap-2">
+        <!-- Popolato via JS -->
+      </div>
+    </section>
+
+    <!-- Banner Info Seduta + Azioni Rapide -->
+    <div class="bg-gradient-to-r from-zinc-900 to-iosCard border border-iosBorder rounded-2xl p-3.5 mb-4 flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <h2 id="active-session-title" class="text-base font-bold text-white truncate">A1 — Caserma</h2>
+        <p id="active-session-sub" class="text-xs text-zinc-400 mt-0.5 truncate">Petto 8 set • Bicipiti 6 set • Spalle 4 set</p>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="btn-edit-template" onclick="editActiveTemplate()" title="Modifica questa seduta" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 active:scale-95 transition">
+          ✏️
+        </button>
+        <button onclick="copyAllLastWorkout()" class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs font-semibold text-zinc-200 active:scale-95 transition">
+          Copia Ultima
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra Timer Rapido Preset -->
+    <div class="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar">
+      <span class="text-xs font-semibold text-zinc-500 shrink-0">Timer recupero:</span>
+      <button onclick="startTimer(60)" class="px-3 py-1.5 rounded-xl bg-iosCard border border-iosBorder text-xs font-bold text-zinc-300 active:bg-iosBlue active:text-white shrink-0">60s</button>
+      <button onclick="startTimer(90)" class="px-3 py-1.5 rounded-xl bg-iosCard border border-iosBorder text-xs font-bold text-zinc-300 active:bg-iosBlue active:text-white shrink-0">90s</button>
+      <button onclick="startTimer(120)" class="px-3 py-1.5 rounded-xl bg-iosCard border border-iosBorder text-xs font-bold text-zinc-300 active:bg-iosBlue active:text-white shrink-0">2m</button>
+      <button onclick="startTimer(180)" class="px-3 py-1.5 rounded-xl bg-iosCard border border-iosBorder text-xs font-bold text-zinc-300 active:bg-iosBlue active:text-white shrink-0">3m</button>
+    </div>
+
+    <!-- Lista Esercizi -->
+    <div id="exercises-container" class="space-y-4 mb-6">
+      <!-- Popolato dinamicamente via JS -->
+    </div>
+
+    <!-- Note Seduta + Pulsante Salva -->
+    <div class="bg-iosCard border border-iosBorder rounded-3xl p-4 mb-8">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Note seduta (es. sensazioni spalla, pump, energia)</label>
+      <input id="workout-notes" type="text" placeholder="Es. Spalla ok, spinto forte su panca..." class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-3.5 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-iosBlue mb-4" />
+
+      <div class="flex gap-2.5">
+        <button onclick="resetCurrentInputs()" class="px-4 py-4 rounded-2xl bg-zinc-800 text-zinc-300 font-bold text-sm active:scale-95 transition">
+          Reset
+        </button>
+        <button onclick="saveCurrentWorkout()" class="flex-1 py-4 px-5 rounded-2xl bg-iosGreen text-black font-extrabold text-base shadow-lg shadow-iosGreen/20 active:scale-95 transition flex items-center justify-center gap-2">
+          <span>💾</span> Salva Allenamento
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VISTA 2: PROGRESSI, VOLUME & GRAFICI                      -->
+  <!-- ========================================================= -->
+  <main id="view-progress" class="max-w-lg mx-auto px-4 pt-3 hidden">
+    <header class="mb-5">
+      <h1 class="text-2xl font-extrabold tracking-tight text-white">Progressi & Volume</h1>
+      <p class="text-xs text-zinc-400 mt-0.5">Monitoraggio carichi, 1RM stimato e serie settimanali</p>
+    </header>
+
+    <!-- Volume Settimanale (Ultimi 7 giorni) -->
+    <section class="bg-iosCard border border-iosBorder rounded-3xl p-4 mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h2 class="text-sm font-bold text-white">Volume Ultimi 7 Giorni</h2>
+          <p class="text-[11px] text-zinc-400">Serie allenanti completate vs Target settimanale</p>
+        </div>
+        <span id="weekly-workouts-count" class="text-xs font-bold px-2.5 py-1 rounded-full bg-iosBlue/20 text-iosBlue">0 sedute</span>
+      </div>
+      <div id="weekly-volume-bars" class="space-y-3">
+        <!-- Popolato via JS -->
+      </div>
+    </section>
+
+    <!-- Selettore Esercizio per Grafico -->
+    <section class="bg-iosCard border border-iosBorder rounded-3xl p-4 mb-6">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Andamento Esercizio</label>
+      <select id="chart-exercise-select" onchange="renderExerciseChart()" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-3.5 py-3 text-sm font-semibold text-white focus:outline-none focus:border-iosBlue mb-4">
+        <!-- Popolato via JS -->
+      </select>
+
+      <!-- KPI Cards Esercizio -->
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <div class="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-3 text-center">
+          <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Max Carico</div>
+          <div id="kpi-max-weight" class="text-base font-extrabold text-white mt-0.5">—</div>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-3 text-center">
+          <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">1RM Stimato</div>
+          <div id="kpi-est-1rm" class="text-base font-extrabold text-iosBlue mt-0.5">—</div>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-3 text-center">
+          <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Miglior Serie</div>
+          <div id="kpi-best-set" class="text-base font-extrabold text-iosGreen mt-0.5">—</div>
+        </div>
+      </div>
+
+      <!-- Canvas Grafico Responsive -->
+      <div class="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-3 relative">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold text-zinc-400">Carico Max (kg) & 1RM Stimato</span>
+          <div class="flex items-center gap-3 text-[10px] font-semibold">
+            <span class="flex items-center gap-1 text-iosBlue"><span class="w-2 h-2 rounded-full bg-iosBlue inline-block"></span> Carico</span>
+            <span class="flex items-center gap-1 text-iosGreen"><span class="w-2 h-2 rounded-full bg-iosGreen inline-block"></span> 1RM</span>
+          </div>
+        </div>
+        <div id="chart-wrapper" class="w-full h-48 relative">
+          <canvas id="progress-canvas"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VISTA 3: SCHEDE & GESTIONE TEMPLATE                       -->
+  <!-- ========================================================= -->
+  <main id="view-templates" class="max-w-lg mx-auto px-4 pt-3 hidden">
+    <header class="flex items-center justify-between mb-5">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-white">Le Tue Schede</h1>
+        <p class="text-xs text-zinc-400 mt-0.5">Crea, modifica o duplica le tue sedute</p>
+      </div>
+      <button onclick="openBuilderModal()" class="px-3.5 py-2.5 rounded-2xl bg-iosBlue text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-iosBlue/25 active:scale-95 transition">
+        <span>＋</span> Crea Seduta
+      </button>
+    </header>
+
+    <div id="templates-management-list" class="space-y-3 mb-8">
+      <!-- Popolato via JS -->
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VISTA 4: STORICO & BACKUP                                 -->
+  <!-- ========================================================= -->
+  <main id="view-history" class="max-w-lg mx-auto px-4 pt-3 hidden">
+    <header class="flex items-center justify-between mb-5">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-white">Storico & Backup</h1>
+        <p class="text-xs text-zinc-400 mt-0.5">Tutti i tuoi allenamenti e le schede salvate</p>
+      </div>
+    </header>
+
+    <!-- Box Esportazione / Importazione Backup -->
+    <section class="bg-iosCard border border-iosBorder rounded-3xl p-4 mb-5">
+      <h2 class="text-sm font-bold text-white mb-1">Salvataggio Dati Sicuro</h2>
+      <p class="text-xs text-zinc-400 mb-3 leading-relaxed">Include sia i progressi registrati che le tue schede personalizzate. Esporta un backup JSON regolarmente.</p>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="exportBackupJSON()" class="py-3 px-3 rounded-2xl bg-iosBlue/15 border border-iosBlue/30 text-iosBlue font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition">
+          <span>⬇️</span> Esporta Backup
+        </button>
+        <label class="py-3 px-3 rounded-2xl bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer">
+          <span>⬆️</span> Importa Backup
+          <input type="file" id="import-file-input" accept=".json" onchange="importBackupJSON(event)" class="hidden" />
+        </label>
+      </div>
+    </section>
+
+    <!-- Elenco Sedute Salvate -->
+    <div id="history-list" class="space-y-3 mb-8">
+      <!-- Popolato via JS -->
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- BOTTOM TAB BAR STILE iOS (4 TAB)                          -->
+  <!-- ========================================================= -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30 ios-blur border-t border-zinc-800/90 tab-bar">
+    <div class="max-w-lg mx-auto grid grid-cols-4 pt-2 px-1">
+      <button id="tab-workout" onclick="switchTab('workout')" class="flex flex-col items-center justify-center gap-1 text-iosBlue transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h2m14 0h2M5 7v6m14-6v6M7 10h10M9 6v8m6-8v8" />
+        </svg>
+        <span class="text-[10px] font-bold">Allenamento</span>
+      </button>
+      <button id="tab-templates" onclick="switchTab('templates')" class="flex flex-col items-center justify-center gap-1 text-zinc-500 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        <span class="text-[10px] font-bold">Schede</span>
+      </button>
+      <button id="tab-progress" onclick="switchTab('progress')" class="flex flex-col items-center justify-center gap-1 text-zinc-500 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8m0 0v5m0-5h-5" />
+        </svg>
+        <span class="text-[10px] font-bold">Progressi</span>
+      </button>
+      <button id="tab-history" onclick="switchTab('history')" class="flex flex-col items-center justify-center gap-1 text-zinc-500 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-[10px] font-bold">Storico</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    // =========================================================================
+    // 1. TEMPLATE PREDEFINITI (CASERMA & METAMORFOSIS)
+    // =========================================================================
+    const DEFAULT_WORKOUT_TEMPLATES = {
+      A1_CASERMA: {
+        id: 'A1_CASERMA',
+        code: 'A1',
+        gym: 'caserma',
+        title: 'A1 — Caserma',
+        subtitle: 'Petto 8 set • Bicipiti 6 set • Spalle 4 set',
+        isCustom: false,
+        exercises: [
+          {
+            id: 'panca_piana_bil',
+            name: 'Panca Piana Bilanciere',
+            muscle: 'Petto',
+            note: '2 set pesanti (5-7 rep) + 1 set back-off (8-9 rep)',
+            sets: [
+              { targetReps: '5-7', maxReps: 7, defaultWeight: 100, label: 'Set 1' },
+              { targetReps: '5-7', maxReps: 7, defaultWeight: 100, label: 'Set 2' },
+              { targetReps: '8-9', maxReps: 9, defaultWeight: 90, label: 'Back-off' }
+            ]
+          },
+          {
+            id: 'panca_inc_inversa_bil',
+            name: 'Panca Inclinata 30° Presa Inversa Bilanciere',
+            muscle: 'Petto',
+            note: 'Focus petto alto, gomiti stretti, zero stress spalla',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 65, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 65, label: 'Set 2' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 65, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'croci_30_man',
+            name: 'Croci Panca 30° Manubri (20-24 kg)',
+            muscle: 'Petto',
+            note: 'Massima apertura controllata',
+            sets: [
+              { targetReps: '8-11', maxReps: 11, defaultWeight: 22, label: 'Set 1' },
+              { targetReps: '8-11', maxReps: 11, defaultWeight: 22, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'curl_bil_dritto',
+            name: 'Curl Bilanciere Dritto',
+            muscle: 'Bicipiti',
+            note: 'Massa / capo breve',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 35, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 35, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'scott_man_singolo',
+            name: 'Panca Scott Manubrio Singolo',
+            muscle: 'Bicipiti',
+            note: 'Picco / isolamento (rep per lato)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 12, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'hammer_curl_man',
+            name: 'Hammer Curl Manubri (martello)',
+            muscle: 'Bicipiti',
+            note: 'Brachiale / spessore',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 14, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 14, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'alzate_lat_caserma',
+            name: 'Alzate Laterali (Manubri 10-14 kg o Cavo)',
+            muscle: 'Spalle',
+            note: 'Fine allenamento • Recupero 60"',
+            sets: [
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 2' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 3' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 4' }
+            ]
+          }
+        ]
+      },
+
+      B1_CASERMA: {
+        id: 'B1_CASERMA',
+        code: 'B1',
+        gym: 'caserma',
+        title: 'B1 — Caserma',
+        subtitle: 'Dorso 8 set • Tricipiti 6 set • Spalle 4 set',
+        isCustom: false,
+        exercises: [
+          {
+            id: 'trazioni_zavorrate',
+            name: 'Trazioni Zavorrate',
+            muscle: 'Dorso',
+            note: 'Presa prona • Zavorra in kg',
+            sets: [
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 12, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'tbar_row_caserma',
+            name: 'T-Bar Row (bilanciere ad angolo)',
+            muscle: 'Dorso',
+            note: 'Spessore centro schiena',
+            sets: [
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 70, label: 'Set 1' },
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 70, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pulley_basso_singolo',
+            name: 'Pulley Basso Singolo',
+            muscle: 'Dorso',
+            note: 'Isolamento unilaterale gran dorsale (per lato)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 70, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 70, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'mezzi_stacchi_scrollate',
+            name: 'Mezzi Stacchi + Scrollate Bilanciere',
+            muscle: 'Dorso',
+            note: '8 mezzi stacchi + 8 scrollate di fila',
+            sets: [
+              { targetReps: '8+8', maxReps: 16, defaultWeight: 60, label: 'Set 1' },
+              { targetReps: '8+8', maxReps: 16, defaultWeight: 60, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'french_press_disco',
+            name: 'French Press Bilanciere / Disco Dietro Testa',
+            muscle: 'Tricipiti',
+            note: 'Capo lungo',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 25, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 25, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pushdown_sbarra_prona',
+            name: 'Push Down Cavo Sbarra (presa prona)',
+            muscle: 'Tricipiti',
+            note: 'Capo laterale',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 35, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 35, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pushdown_inversa_singolo',
+            name: 'Push Down Presa Inversa Singolo a un Braccio',
+            muscle: 'Tricipiti',
+            note: 'Capo mediale (rep per lato)',
+            sets: [
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 12, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'alzate_lat_caserma',
+            name: 'Alzate Laterali (Manubri 10-14 kg o Cavo)',
+            muscle: 'Spalle',
+            note: 'Fine allenamento • Recupero 60"',
+            sets: [
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 2' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 3' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 4' }
+            ]
+          }
+        ]
+      },
+
+      A2_CASERMA: {
+        id: 'A2_CASERMA',
+        code: 'A2',
+        gym: 'caserma',
+        title: 'A2 — Caserma',
+        subtitle: 'Petto 8 set • Bicipiti 6 set • Spalle 4 set',
+        isCustom: false,
+        exercises: [
+          {
+            id: 'panca_inc_30_bil',
+            name: 'Panca Inclinata 30° Bilanciere (presa classica)',
+            muscle: 'Petto',
+            note: 'Spinta inclinata pesante',
+            sets: [
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 80, label: 'Set 1' },
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 80, label: 'Set 2' },
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 80, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'panca_piana_stretta',
+            name: 'Panca Piana Presa Stretta Bilanciere',
+            muscle: 'Petto',
+            note: 'Petto interno/alto + spinta',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 75, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 75, label: 'Set 2' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 75, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'croci_piana_piegamenti',
+            name: 'Croci Piana Manubri (20-24 kg) + Piegamenti',
+            muscle: 'Petto',
+            note: 'Superset: 10-12 croci + piegamenti a cedimento',
+            sets: [
+              { targetReps: '10-12+max', maxReps: 15, defaultWeight: 20, label: 'Set 1' },
+              { targetReps: '10-12+max', maxReps: 15, defaultWeight: 20, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'bayesian_cavo_caserma',
+            name: 'Curl Cavo Basso (Bayesian)',
+            muscle: 'Bicipiti',
+            note: 'Massimo allungamento (capo lungo)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 25, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 25, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'hammer_cavo_corda_cas',
+            name: 'Hammer Curl Cavo Corda / Manubri',
+            muscle: 'Bicipiti',
+            note: 'Brachiale / martello',
+            sets: [
+              { targetReps: '9-11', maxReps: 11, defaultWeight: 25, label: 'Set 1' },
+              { targetReps: '9-11', maxReps: 11, defaultWeight: 25, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'curl_man_inclinata',
+            name: 'Curl Manubri su Panca Inclinata 45°/60°',
+            muscle: 'Bicipiti',
+            note: 'Allungamento con manubri',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 12, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'alzate_lat_caserma',
+            name: 'Alzate Laterali (Manubri 10-14 kg o Cavo)',
+            muscle: 'Spalle',
+            note: 'Fine allenamento • Recupero 60"',
+            sets: [
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 2' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 3' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 12, label: 'Set 4' }
+            ]
+          }
+        ]
+      },
+
+      B2_CASERMA: {
+        id: 'B2_CASERMA',
+        code: 'B2',
+        gym: 'caserma',
+        title: 'B2 — Caserma',
+        subtitle: 'Dorso 11 set • Tricipiti 6 set • Spalle 4 set',
+        isCustom: false,
+        exercises: [
+          {
+            id: 'lat_machine_media_cas',
+            name: 'Lat Machine Presa Media',
+            muscle: 'Dorso',
+            note: 'Ampiezza dorsale',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 75, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 75, label: 'Set 2' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 75, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'meadows_row_cas',
+            name: 'Meadows Row (bilanciere ad angolo)',
+            muscle: 'Dorso',
+            note: 'Tirata unilaterale pesante (rep per lato)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 30, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 30, label: 'Set 2' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 30, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'pulley_singolo_b2',
+            name: 'Pulley Basso Singolo (o Lat Stretta)',
+            muscle: 'Dorso',
+            note: 'Isolamento gran dorsale',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 70, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 70, label: 'Set 2' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 70, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'mezzi_stacchi_scrollate',
+            name: 'Mezzi Stacchi + Scrollate Bilanciere',
+            muscle: 'Dorso',
+            note: '8 mezzi stacchi + 8 scrollate di fila',
+            sets: [
+              { targetReps: '8+8', maxReps: 16, defaultWeight: 60, label: 'Set 1' },
+              { targetReps: '8+8', maxReps: 16, defaultWeight: 60, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'estensioni_cavo_dietro',
+            name: 'Estensioni Cavo Dietro la Testa',
+            muscle: 'Tricipiti',
+            note: 'Capo lungo',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 20, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 20, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pushdown_singolo_incrociato',
+            name: 'Push Down Singolo Incrociato al Cavo',
+            muscle: 'Tricipiti',
+            note: 'Capo laterale (rep per lato)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 15, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 15, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pushdown_inversa_sbarra',
+            name: 'Push Down Presa Inversa (palmi in su)',
+            muscle: 'Tricipiti',
+            note: 'Capo mediale',
+            sets: [
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 20, label: 'Set 1' },
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 20, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'alzate_lat_cavo_b2',
+            name: 'Alzate Laterali al Cavo (2 avanti + 2 dietro)',
+            muscle: 'Spalle',
+            note: 'Fine allenamento • Recupero 60"',
+            sets: [
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 15, label: 'Avanti 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 15, label: 'Avanti 2' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 15, label: 'Dietro 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 15, label: 'Dietro 2' }
+            ]
+          }
+        ]
+      },
+
+      A2_METAMORFOSIS: {
+        id: 'A2_METAMORFOSIS',
+        code: 'A2',
+        gym: 'metamorfosis',
+        title: 'A2 — Metamorfosis',
+        subtitle: 'Petto 9 set • Bicipiti 6 set • Spalle 4 set',
+        isCustom: false,
+        exercises: [
+          {
+            id: 'chest_press_conc_meta',
+            name: 'Chest Press Piana Concentrica',
+            muscle: 'Petto',
+            note: 'Carico indicato per lato (kg/lato)',
+            sets: [
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 50, label: 'Set 1' },
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 50, label: 'Set 2' },
+              { targetReps: '6-8', maxReps: 8, defaultWeight: 50, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'panca_45_mp_meta',
+            name: 'Panca 45° Multipower',
+            muscle: 'Petto',
+            note: 'Petto alto • Carico per lato (kg/lato)',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 25, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 25, label: 'Set 2' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 25, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'cross_machine_croci_meta',
+            name: 'Croci ai Cavi dall'alto (Cross Machine)',
+            muscle: 'Petto',
+            note: 'Contrazione di picco',
+            sets: [
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 30, label: 'Set 1' },
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 30, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pectoral_machine_meta',
+            name: 'Pectoral Machine (o Croci Dischi)',
+            muscle: 'Petto',
+            note: '12-15 rep + mezzi colpi finali a cedimento',
+            sets: [
+              { targetReps: '12-15+parz', maxReps: 15, defaultWeight: 45, label: 'Set Max' }
+            ]
+          },
+          {
+            id: 'bayesian_meta',
+            name: 'Bayesian Curl al Cavo Basso',
+            muscle: 'Bicipiti',
+            note: 'Allungamento capo lungo',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 25, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 25, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'hammer_cavo_corda_meta',
+            name: 'Hammer Curl Cavo con Corda (martello)',
+            muscle: 'Bicipiti',
+            note: 'Brachiale / spessore',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 50, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 50, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'curl_cavo_dritto_meta',
+            name: 'Curl Cavo Dritto / Barra EZ (o Scott Machine)',
+            muscle: 'Bicipiti',
+            note: 'Contrazione di picco',
+            sets: [
+              { targetReps: '9-11', maxReps: 11, defaultWeight: 55, label: 'Set 1' },
+              { targetReps: '9-11', maxReps: 11, defaultWeight: 55, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'alzate_lat_macchina_meta',
+            name: 'Alzate Laterali Macchinario',
+            muscle: 'Spalle',
+            note: 'Fine allenamento • Recupero 60"',
+            sets: [
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 2' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 3' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 4' }
+            ]
+          }
+        ]
+      },
+
+      B2_METAMORFOSIS: {
+        id: 'B2_METAMORFOSIS',
+        code: 'B2',
+        gym: 'metamorfosis',
+        title: 'B2 — Metamorfosis',
+        subtitle: 'Dorso 10 set • Tricipiti 6 set • Spalle 4 set',
+        isCustom: false,
+        exercises: [
+          {
+            id: 'lat_circolare_meta',
+            name: 'Lat Machine Circolare / Presa Media',
+            muscle: 'Dorso',
+            note: 'Ampiezza dorsale',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 65, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 65, label: 'Set 2' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 65, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'pulldown_iliaco_meta',
+            name: 'Pulldown Iliaco Macchina (o Pulley Doppio)',
+            muscle: 'Dorso',
+            note: 'Isolamento gran dorsale (kg/lato)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 50, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 50, label: 'Set 2' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 50, label: 'Set 3' }
+            ]
+          },
+          {
+            id: 'tbar_petto_app_meta',
+            name: 'T-Bar Petto Appoggiato (o Meadows Row)',
+            muscle: 'Dorso',
+            note: 'Centro schiena',
+            sets: [
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 50, label: 'Set 1' },
+              { targetReps: '7-9', maxReps: 9, defaultWeight: 50, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pulldown_braccia_tese_meta',
+            name: 'Pulldown Braccia Tese Corda',
+            muscle: 'Dorso',
+            note: 'Rifinitura dorsale',
+            sets: [
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 45, label: 'Set 1' },
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 45, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'tricipiti_dietro_macchina_meta',
+            name: 'Tricipiti Dietro Testa Macchina / Cavo',
+            muscle: 'Tricipiti',
+            note: 'Capo lungo',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 60, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 60, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pushdown_singolo_inc_meta',
+            name: 'Push Down Singolo Incrociato',
+            muscle: 'Tricipiti',
+            note: 'Capo laterale (rep per lato)',
+            sets: [
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 15, label: 'Set 1' },
+              { targetReps: '8-10', maxReps: 10, defaultWeight: 15, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'pushdown_inversa_kick_meta',
+            name: 'Push Down Presa Inversa (o Kickback Cavo)',
+            muscle: 'Tricipiti',
+            note: 'Capo mediale',
+            sets: [
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 20, label: 'Set 1' },
+              { targetReps: '10-12', maxReps: 12, defaultWeight: 20, label: 'Set 2' }
+            ]
+          },
+          {
+            id: 'alzate_lat_macchina_meta',
+            name: 'Alzate Laterali Macchinario',
+            muscle: 'Spalle',
+            note: 'Fine allenamento • Recupero 60"',
+            sets: [
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 1' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 2' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 3' },
+              { targetReps: '12-15', maxReps: 15, defaultWeight: 35, label: 'Set 4' }
+            ]
+          }
+        ]
+      }
+    };
+
+    const WEEKLY_VOLUME_TARGETS = {
+      Petto: 16,
+      Dorso: 18,
+      Spalle: 16,
+      Bicipiti: 12,
+      Tricipiti: 12,
+      Gambe: 14,
+      Addome: 8
+    };
+
+    // =========================================================================
+    // 2. STATO APPLICAZIONE & PERSISTENZA (LOCALSTORAGE)
+    // =========================================================================
+    const STORAGE_KEY_HISTORY = 'irontrack_history_v1';
+    const STORAGE_KEY_DRAFT = 'irontrack_draft_v1';
+    const STORAGE_KEY_TEMPLATES = 'irontrack_templates_v1';
+
+    let state = {
+      gym: 'caserma',
+      activeTemplateId: 'A1_CASERMA',
+      activeTab: 'workout',
+      templates: {},
+      history: [],
+      drafts: {}
+    };
+
+    // Stato Builder Scheda
+    let builderState = {
+      editingTemplateId: null,
+      gym: 'caserma',
+      exercises: []
+    };
+
+    let timerInterval = null;
+    let timerSecondsLeft = 0;
+
+    function getInitialSeedHistory() {
+      return [
+        {
+          id: 'seed_1',
+          date: '2026-10-26T18:00:00.000Z',
+          templateId: 'A1_CASERMA',
+          gym: 'caserma',
+          code: 'A1',
+          title: 'A1 — Caserma (Storico)',
+          notes: 'Picco panca 104x6+5, croci 20x9+7',
+          exercises: [
+            { id: 'panca_piana_bil', name: 'Panca Piana Bilanciere', muscle: 'Petto', sets: [{ weight: 104, reps: 6, done: true }, { weight: 104, reps: 5, done: true }, { weight: 92, reps: 8, done: true }] },
+            { id: 'croci_30_man', name: 'Croci Panca 30° Manubri (20-24 kg)', muscle: 'Petto', sets: [{ weight: 20, reps: 9, done: true }, { weight: 20, reps: 7, done: true }] }
+          ]
+        },
+        {
+          id: 'seed_2',
+          date: '2026-11-06T18:00:00.000Z',
+          templateId: 'B1_CASERMA',
+          gym: 'caserma',
+          code: 'B1',
+          title: 'B1 — Caserma (Storico)',
+          notes: 'Trazioni zavorrate +12kg 8+6, pulley sing 70x7+6',
+          exercises: [
+            { id: 'trazioni_zavorrate', name: 'Trazioni Zavorrate', muscle: 'Dorso', sets: [{ weight: 12, reps: 8, done: true }, { weight: 12, reps: 6, done: true }] },
+            { id: 'pulley_basso_singolo', name: 'Pulley Basso Singolo', muscle: 'Dorso', sets: [{ weight: 70, reps: 7, done: true }, { weight: 70, reps: 6, done: true }] },
+            { id: 'mezzi_stacchi_scrollate', name: 'Mezzi Stacchi + Scrollate Bilanciere', muscle: 'Dorso', sets: [{ weight: 60, reps: 16, done: true }, { weight: 60, reps: 16, done: true }] }
+          ]
+        },
+        {
+          id: 'seed_3',
+          date: '2026-11-11T18:00:00.000Z',
+          templateId: 'A2_METAMORFOSIS',
+          gym: 'metamorfosis',
+          code: 'A2',
+          title: 'A2 — Metamorfosis (Storico)',
+          notes: 'Chest press 50/lato 7+6, panca 45 mp 25/lato 7+5',
+          exercises: [
+            { id: 'chest_press_conc_meta', name: 'Chest Press Piana Concentrica', muscle: 'Petto', sets: [{ weight: 50, reps: 7, done: true }, { weight: 50, reps: 6, done: true }] },
+            { id: 'panca_45_mp_meta', name: 'Panca 45° Multipower', muscle: 'Petto', sets: [{ weight: 25, reps: 7, done: true }, { weight: 25, reps: 5, done: true }] },
+            { id: 'bayesian_meta', name: 'Bayesian Curl al Cavo Basso', muscle: 'Bicipiti', sets: [{ weight: 25, reps: 8, done: true }, { weight: 25, reps: 6, done: true }] },
+            { id: 'hammer_cavo_corda_meta', name: 'Hammer Curl Cavo con Corda (martello)', muscle: 'Bicipiti', sets: [{ weight: 50, reps: 8, done: true }, { weight: 50, reps: 7, done: true }] },
+            { id: 'curl_cavo_dritto_meta', name: 'Curl Cavo Dritto / Barra EZ (o Scott Machine)', muscle: 'Bicipiti', sets: [{ weight: 55, reps: 9, done: true }, { weight: 55, reps: 7, done: true }] }
+          ]
+        }
+      ];
+    }
+
+    function loadState() {
+      try {
+        const rawTpl = localStorage.getItem(STORAGE_KEY_TEMPLATES);
+        if (rawTpl) {
+          state.templates = JSON.parse(rawTpl);
+        } else {
+          state.templates = JSON.parse(JSON.stringify(DEFAULT_WORKOUT_TEMPLATES));
+          saveTemplatesToStorage();
+        }
+
+        const rawHist = localStorage.getItem(STORAGE_KEY_HISTORY);
+        if (rawHist) {
+          state.history = JSON.parse(rawHist);
+        } else {
+          state.history = getInitialSeedHistory();
+          saveHistoryToStorage();
+        }
+
+        const rawDraft = localStorage.getItem(STORAGE_KEY_DRAFT);
+        if (rawDraft) {
+          state.drafts = JSON.parse(rawDraft);
+        }
+      } catch (e) {
+        console.error('Errore caricamento localStorage:', e);
+        state.templates = JSON.parse(JSON.stringify(DEFAULT_WORKOUT_TEMPLATES));
+        state.history = getInitialSeedHistory();
+      }
+    }
+
+    function saveTemplatesToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(state.templates));
+      } catch (e) {
+        showToast('Errore salvataggio schede', '⚠️');
+      }
+    }
+
+    function saveHistoryToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(state.history));
+      } catch (e) {
+        showToast('Errore salvataggio memoria locale', '⚠️');
+      }
+    }
+
+    function saveDraftsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_DRAFT, JSON.stringify(state.drafts));
+      } catch (e) {
+        console.error('Errore salvataggio bozza:', e);
+      }
+    }
+
+    // =========================================================================
+    // 3. LOGICA PALESTRA & SEDUTA ATTIVA
+    // =========================================================================
+    function getTemplatesForGym(gym) {
+      return Object.values(state.templates).filter(t => t.gym === gym);
+    }
+
+    function getActiveTemplate() {
+      const gymTemplates = getTemplatesForGym(state.gym);
+      if (state.templates[state.activeTemplateId] && state.templates[state.activeTemplateId].gym === state.gym) {
+        return state.templates[state.activeTemplateId];
+      }
+      if (gymTemplates.length > 0) {
+        state.activeTemplateId = gymTemplates[0].id;
+        return gymTemplates[0];
+      }
+      // Fallback se l'utente cancella tutte le sedute di una palestra
+      const fallback = Object.values(state.templates)[0];
+      if (fallback) {
+        state.gym = fallback.gym;
+        state.activeTemplateId = fallback.id;
+        return fallback;
+      }
+      return null;
+    }
+
+    function setGym(gym) {
+      state.gym = gym;
+      const gymTemplates = getTemplatesForGym(gym);
+      if (gymTemplates.length > 0) {
+        state.activeTemplateId = gymTemplates[0].id;
+      }
+      renderWorkoutView();
+    }
+
+    function selectTemplate(templateId) {
+      state.activeTemplateId = templateId;
+      renderWorkoutView();
+    }
+
+    function getLastPerformance(exerciseId) {
+      for (let i = state.history.length - 1; i >= 0; i--) {
+        const w = state.history[i];
+        const found = w.exercises.find(ex => ex.id === exerciseId);
+        if (found && found.sets && found.sets.length > 0) {
+          return {
+            date: w.date,
+            sets: found.sets
+          };
+        }
+      }
+      return null;
+    }
+
+    function ensureDraftForTemplate(tpl) {
+      if (!tpl) return null;
+      if (!state.drafts[tpl.id]) {
+        const exMap = {};
+        tpl.exercises.forEach(ex => {
+          const last = getLastPerformance(ex.id);
+          exMap[ex.id] = ex.sets.map((s, idx) => {
+            const lastSet = last && last.sets[idx] ? last.sets[idx] : null;
+            return {
+              weight: lastSet ? lastSet.weight : s.defaultWeight,
+              reps: '',
+              done: false
+            };
+          });
+        });
+        state.drafts[tpl.id] = { exercises: exMap, notes: '' };
+        saveDraftsToStorage();
+      } else {
+        // Sincronizza eventuali nuovi esercizi aggiunti in modifica template
+        tpl.exercises.forEach(ex => {
+          if (!state.drafts[tpl.id].exercises[ex.id] || state.drafts[tpl.id].exercises[ex.id].length !== ex.sets.length) {
+            const last = getLastPerformance(ex.id);
+            state.drafts[tpl.id].exercises[ex.id] = ex.sets.map((s, idx) => {
+              const prevDraft = state.drafts[tpl.id].exercises[ex.id] && state.drafts[tpl.id].exercises[ex.id][idx];
+              if (prevDraft) return prevDraft;
+              const lastSet = last && last.sets[idx] ? last.sets[idx] : null;
+              return {
+                weight: lastSet ? lastSet.weight : s.defaultWeight,
+                reps: '',
+                done: false
+              };
+            });
+          }
+        });
+      }
+      return state.drafts[tpl.id];
+    }
+
+    // =========================================================================
+    // 4. RENDERING VISTA ALLENAMENTO
+    // =========================================================================
+    function renderWorkoutView() {
+      const now = new Date();
+      document.getElementById('today-date-label').textContent = now.toLocaleDateString('it-IT', {
+        weekday: 'long', day: 'numeric', month: 'long'
+      }).replace(/^\w/, c => c.toUpperCase());
+
+      const btnCas = document.getElementById('btn-gym-caserma');
+      const btnMeta = document.getElementById('btn-gym-metamorfosis');
+      const hint = document.getElementById('gym-badge-hint');
+
+      if (state.gym === 'caserma') {
+        btnCas.className = 'py-2.5 px-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-iosBlue text-white shadow';
+        btnMeta.className = 'py-2.5 px-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 text-zinc-400 hover:text-white';
+        hint.textContent = 'Pesi Liberi & Bilancieri';
+        hint.className = 'text-[11px] font-medium text-iosBlue';
+      } else {
+        btnMeta.className = 'py-2.5 px-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-iosPurple text-white shadow';
+        btnCas.className = 'py-2.5 px-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 text-zinc-400 hover:text-white';
+        hint.textContent = 'Macchine & Cavi';
+        hint.className = 'text-[11px] font-medium text-iosPurple';
+      }
+
+      const gymTemplates = getTemplatesForGym(state.gym);
+      const tpl = getActiveTemplate();
+      const selectorEl = document.getElementById('session-selector');
+
+      if (!tpl || gymTemplates.length === 0) {
+        selectorEl.className = 'block';
+        selectorEl.innerHTML = `
+          <button onclick="openBuilderModal('${state.gym}')" class="w-full py-3 rounded-2xl border border-dashed border-zinc-700 text-xs font-bold text-iosBlue">
+            ＋ Crea la prima seduta per questa palestra
+          </button>
+        `;
+        document.getElementById('active-session-title').textContent = 'Nessuna seduta selezionata';
+        document.getElementById('active-session-sub').textContent = 'Tocca "+ Nuova Scheda" per crearne una';
+        document.getElementById('session-sets-summary').textContent = '0 set';
+        document.getElementById('exercises-container').innerHTML = '';
+        return;
+      }
+
+      const colsClass = gymTemplates.length <= 2 ? 'grid-cols-2' : gymTemplates.length === 3 ? 'grid-cols-3' : 'grid-cols-4';
+      selectorEl.className = `grid ${colsClass} gap-2`;
+      selectorEl.innerHTML = gymTemplates.map(item => {
+        const isActive = tpl.id === item.id;
+        const activeBg = state.gym === 'caserma' ? 'bg-iosBlue border-iosBlue text-white' : 'bg-iosPurple border-iosPurple text-white';
+        const baseClass = isActive
+          ? `${activeBg} shadow-md`
+          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white';
+        const shortLabel = item.subtitle ? item.subtitle.split('•')[0].trim() : `${item.exercises.length} es.`;
+        return `
+          <button onclick="selectTemplate('${item.id}')" class="py-2.5 px-2 rounded-2xl border transition-all flex flex-col items-center justify-center active:scale-95 ${baseClass}">
+            <span class="text-sm font-extrabold leading-tight">${item.code}</span>
+            <span class="text-[10px] font-medium opacity-80 mt-0.5 truncate max-w-full">${shortLabel}</span>
+          </button>
+        `;
+      }).join('');
+
+      const draft = ensureDraftForTemplate(tpl);
+      document.getElementById('active-session-title').textContent = tpl.title;
+      document.getElementById('active-session-sub').textContent = tpl.subtitle || `${tpl.exercises.length} esercizi`;
+      const totalSets = tpl.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+      document.getElementById('session-sets-summary').textContent = `${totalSets} set totali`;
+      document.getElementById('workout-notes').value = draft.notes || '';
+
+      const container = document.getElementById('exercises-container');
+      container.innerHTML = tpl.exercises.map((ex, exIdx) => {
+        const last = getLastPerformance(ex.id);
+        const draftSets = draft.exercises[ex.id] || [];
+        const statusBadge = computeExerciseStatusBadge(ex, draftSets, last);
+
+        const lastText = last
+          ? last.sets.map(s => `${s.weight}x${s.reps}`).join(' + ')
+          : `Rif. partenza: ${ex.sets[0]?.defaultWeight || 0} kg`;
+
+        const muscleColors = {
+          Petto: 'text-iosBlue bg-iosBlue/15 border-iosBlue/25',
+          Dorso: 'text-iosGreen bg-iosGreen/15 border-iosGreen/25',
+          Bicipiti: 'text-iosOrange bg-iosOrange/15 border-iosOrange/25',
+          Tricipiti: 'text-iosPurple bg-iosPurple/15 border-iosPurple/25',
+          Spalle: 'text-pink-400 bg-pink-500/15 border-pink-500/25',
+          Gambe: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/25',
+          Addome: 'text-yellow-400 bg-yellow-500/15 border-yellow-500/25'
+        };
+        const mColor = muscleColors[ex.muscle] || 'text-zinc-300 bg-zinc-800 border-zinc-700';
+
+        const setsHtml = ex.sets.map((sMeta, sIdx) => {
+          const dSet = draftSets[sIdx] || { weight: sMeta.defaultWeight, reps: '', done: false };
+          const rowBg = dSet.done ? 'bg-iosGreen/10 border-iosGreen/40' : 'bg-zinc-950 border-zinc-800/90';
+
+          return `
+            <div class="grid grid-cols-12 items-center gap-2 p-2 rounded-2xl border transition-colors ${rowBg}">
+              <div class="col-span-4 pl-1">
+                <div class="text-xs font-bold text-white">${sMeta.label}</div>
+                <div class="text-[11px] text-zinc-400 font-medium">Target: ${sMeta.targetReps}</div>
+              </div>
+              <div class="col-span-3">
+                <div class="relative">
+                  <input type="number" inputmode="decimal" step="0.5" value="${dSet.weight}"
+                    onchange="updateSetInput('${ex.id}', ${sIdx}, 'weight', this.value)"
+                    placeholder="Kg"
+                    class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl py-2 px-2 text-center font-bold text-white focus:outline-none focus:border-iosBlue" />
+                  <span class="block text-[9px] text-center text-zinc-500 font-semibold mt-0.5">KG</span>
+                </div>
+              </div>
+              <div class="col-span-3">
+                <div class="relative">
+                  <input type="number" inputmode="numeric" value="${dSet.reps}"
+                    onchange="updateSetInput('${ex.id}', ${sIdx}, 'reps', this.value)"
+                    placeholder="${sMeta.maxReps}"
+                    class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl py-2 px-2 text-center font-bold text-white focus:outline-none focus:border-iosBlue" />
+                  <span class="block text-[9px] text-center text-zinc-500 font-semibold mt-0.5">REP</span>
+                </div>
+              </div>
+              <div class="col-span-2 flex justify-end pr-0.5">
+                <button onclick="toggleSetDone('${ex.id}', ${sIdx})"
+                  class="w-11 h-11 rounded-xl flex items-center justify-center transition-all active:scale-90 ${dSet.done ? 'bg-iosGreen text-black shadow-md shadow-iosGreen/25' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'}">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <article class="bg-iosCard border border-iosBorder rounded-3xl p-4 shadow-md">
+            <div class="flex items-start justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-lg border ${mColor}">${ex.muscle}</span>
+                ${statusBadge}
+              </div>
+              ${last ? `<button onclick="copyExerciseLast('${ex.id}')" class="text-[11px] font-semibold text-iosBlue bg-iosBlue/10 px-2.5 py-1 rounded-lg active:scale-95 shrink-0">Copia</button>` : ''}
+            </div>
+
+            <h3 class="text-base font-bold text-white leading-snug">${exIdx + 1}. ${ex.name}</h3>
+            ${ex.note ? `<p class="text-xs text-zinc-400 mt-0.5 mb-2.5">${ex.note}</p>` : '<div class="mb-2.5"></div>'}
+
+            <div class="bg-zinc-950/90 border border-zinc-800/80 rounded-xl px-3 py-2 mb-3 flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-zinc-400">Ultima volta:</span>
+              <span class="text-xs font-bold text-zinc-200 font-mono">${lastText}</span>
+            </div>
+
+            <div class="space-y-2">
+              ${setsHtml}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function computeExerciseStatusBadge(ex, draftSets, last) {
+      const validCurrent = draftSets.filter(s => Number(s.reps) > 0 && Number(s.weight) >= 0);
+      if (validCurrent.length === 0) return '';
+
+      const allHitTop = validCurrent.length === ex.sets.length &&
+        validCurrent.every((s, idx) => Number(s.reps) >= ex.sets[idx].maxReps);
+
+      let beatLast = false;
+      if (last && last.sets.length > 0) {
+        const lastVol = last.sets.reduce((acc, s) => acc + (Number(s.weight) * Number(s.reps)), 0);
+        const currVol = validCurrent.reduce((acc, s) => acc + (Number(s.weight) * Number(s.reps)), 0);
+        const lastMaxW = Math.max(...last.sets.map(s => Number(s.weight)));
+        const currMaxW = Math.max(...validCurrent.map(s => Number(s.weight)));
+        if (currVol > lastVol || currMaxW > lastMaxW) {
+          beatLast = true;
+        }
+      }
+
+      if (allHitTop) {
+        return `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-iosOrange/20 text-iosOrange border border-iosOrange/30">🔥 Tetto rep: +2kg prox</span>`;
+      }
+      if (beatLast) {
+        return `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-iosGreen/20 text-iosGreen border border-iosGreen/30">🚀 +PR / Volume</span>`;
+      }
+      return '';
+    }
+
+    // =========================================================================
+    // 5. CREAZIONE & MODIFICA SCHEDE PERSONALIZZATE (BUILDER)
+    // =========================================================================
+    function openBuilderModal(defaultGym = null, editTemplateId = null) {
+      builderState.editingTemplateId = editTemplateId;
+
+      if (editTemplateId && state.templates[editTemplateId]) {
+        const tpl = state.templates[editTemplateId];
+        builderState.gym = tpl.gym;
+        document.getElementById('builder-modal-title').textContent = `Modifica ${tpl.code}`;
+        document.getElementById('builder-code').value = tpl.code;
+        document.getElementById('builder-name').value = tpl.title.includes('—') ? tpl.title.split('—')[1].trim() : tpl.title;
+        document.getElementById('builder-sub').value = tpl.subtitle || '';
+        builderState.exercises = tpl.exercises.map(ex => ({
+          id: ex.id,
+          name: ex.name,
+          muscle: ex.muscle,
+          note: ex.note || '',
+          numSets: ex.sets.length,
+          targetReps: ex.sets[0]?.targetReps || '8-10',
+          defaultWeight: ex.sets[0]?.defaultWeight || 20
+        }));
+      } else {
+        builderState.gym = defaultGym || state.gym;
+        document.getElementById('builder-modal-title').textContent = 'Nuova Seduta';
+        document.getElementById('builder-code').value = '';
+        document.getElementById('builder-name').value = '';
+        document.getElementById('builder-sub').value = '';
+        builderState.exercises = [
+          { id: '', name: '', muscle: 'Petto', note: '', numSets: 3, targetReps: '8-10', defaultWeight: 20 }
+        ];
+      }
+
+      setBuilderGym(builderState.gym);
+      renderBuilderExercises();
+
+      const modal = document.getElementById('builder-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function editActiveTemplate() {
+      const tpl = getActiveTemplate();
+      if (!tpl) return;
+      openBuilderModal(tpl.gym, tpl.id);
+    }
+
+    function closeBuilderModal() {
+      const modal = document.getElementById('builder-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setBuilderGym(gym) {
+      builderState.gym = gym;
+      const btnCas = document.getElementById('builder-gym-caserma');
+      const btnMeta = document.getElementById('builder-gym-metamorfosis');
+      if (gym === 'caserma') {
+        btnCas.className = 'py-2 rounded-xl text-xs font-bold bg-iosBlue text-white transition';
+        btnMeta.className = 'py-2 rounded-xl text-xs font-bold text-zinc-400 transition';
+      } else {
+        btnMeta.className = 'py-2 rounded-xl text-xs font-bold bg-iosPurple text-white transition';
+        btnCas.className = 'py-2 rounded-xl text-xs font-bold text-zinc-400 transition';
+      }
+    }
+
+    function addBuilderExercise() {
+      builderState.exercises.push({
+        id: '',
+        name: '',
+        muscle: 'Petto',
+        note: '',
+        numSets: 3,
+        targetReps: '8-10',
+        defaultWeight: 20
+      });
+      renderBuilderExercises();
+    }
+
+    function removeBuilderExercise(idx) {
+      if (builderState.exercises.length <= 1) {
+        showToast('Inserisci almeno 1 esercizio', '⚠️');
+        return;
+      }
+      builderState.exercises.splice(idx, 1);
+      renderBuilderExercises();
+    }
+
+    function moveBuilderExercise(idx, dir) {
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= builderState.exercises.length) return;
+      const temp = builderState.exercises[idx];
+      builderState.exercises[idx] = builderState.exercises[newIdx];
+      builderState.exercises[newIdx] = temp;
+      renderBuilderExercises();
+    }
+
+    function updateBuilderField(idx, field, value) {
+      if (!builderState.exercises[idx]) return;
+      builderState.exercises[idx][field] = value;
+    }
+
+    function renderBuilderExercises() {
+      const listEl = document.getElementById('builder-exercises-list');
+      document.getElementById('builder-ex-count').textContent = `${builderState.exercises.length} esercizi`;
+
+      const muscles = ['Petto', 'Dorso', 'Spalle', 'Bicipiti', 'Tricipiti', 'Gambe', 'Addome'];
+
+      listEl.innerHTML = builderState.exercises.map((ex, idx) => {
+        const muscleOpts = muscles.map(m => `<option value="${m}" ${ex.muscle === m ? 'selected' : ''}>${m}</option>`).join('');
+        return `
+          <div class="bg-iosCard border border-iosBorder rounded-3xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-iosBlue">Esercizio #${idx + 1}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="moveBuilderExercise(${idx}, -1)" class="w-7 h-7 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold">↑</button>
+                <button type="button" onclick="moveBuilderExercise(${idx}, 1)" class="w-7 h-7 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold">↓</button>
+                <button type="button" onclick="removeBuilderExercise(${idx})" class="w-7 h-7 rounded-lg bg-iosRed/15 text-iosRed text-xs font-bold ml-1">✕</button>
+              </div>
+            </div>
+
+            <div>
+              <input type="text" value="${ex.name.replace(/"/g, '&quot;')}" oninput="updateBuilderField(${idx}, 'name', this.value)" placeholder="Nome esercizio (es. Squat Bilanciere)" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-3.5 py-2.5 text-white font-semibold focus:outline-none focus:border-iosBlue" />
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Muscolo</label>
+                <select onchange="updateBuilderField(${idx}, 'muscle', this.value)" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-2 text-xs font-bold text-white focus:outline-none">
+                  ${muscleOpts}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Serie</label>
+                <input type="number" min="1" max="10" value="${ex.numSets}" oninput="updateBuilderField(${idx}, 'numSets', Number(this.value))" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-2 text-center font-bold text-white focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Target Rep</label>
+                <input type="text" value="${ex.targetReps}" oninput="updateBuilderField(${idx}, 'targetReps', this.value)" placeholder="8-10" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-2 text-center font-bold text-white focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div class="col-span-1">
+                <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Carico Rif (kg)</label>
+                <input type="number" step="0.5" value="${ex.defaultWeight}" oninput="updateBuilderField(${idx}, 'defaultWeight', Number(this.value))" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-2 text-center font-bold text-white focus:outline-none" />
+              </div>
+              <div class="col-span-2">
+                <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Note / Tecnica (opz.)</label>
+                <input type="text" value="${(ex.note || '').replace(/"/g, '&quot;')}" oninput="updateBuilderField(${idx}, 'note', this.value)" placeholder="Es. Fermo 1s al petto" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function slugifyExerciseId(name) {
+      return name.toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '') || ('ex_' + Date.now());
+    }
+
+    function parseMaxReps(targetStr) {
+      const nums = String(targetStr).match(/\d+/g);
+      if (!nums || nums.length === 0) return 10;
+      return Math.max(...nums.map(Number));
+    }
+
+    function saveCustomTemplate() {
+      const codeRaw = document.getElementById('builder-code').value.trim().toUpperCase();
+      const nameRaw = document.getElementById('builder-name').value.trim();
+      const subRaw = document.getElementById('builder-sub').value.trim();
+
+      if (!codeRaw) {
+        showToast('Inserisci un codice seduta (es. C1, A3, Legs)', '⚠️');
+        return;
+      }
+
+      const validExercises = builderState.exercises.filter(e => e.name.trim().length > 0);
+      if (validExercises.length === 0) {
+        showToast('Inserisci almeno un esercizio con nome', '⚠️');
+        return;
+      }
+
+      const gymLabel = builderState.gym === 'caserma' ? 'Caserma' : 'Metamorfosis';
+      const title = nameRaw ? `${codeRaw} — ${nameRaw}` : `${codeRaw} — ${gymLabel}`;
+
+      // Calcola sottotitolo automatico se vuoto
+      let autoSub = subRaw;
+      if (!autoSub) {
+        const muscleSummary = {};
+        validExercises.forEach(e => {
+          const nSets = Math.max(1, Number(e.numSets) || 3);
+          muscleSummary[e.muscle] = (muscleSummary[e.muscle] || 0) + nSets;
+        });
+        autoSub = Object.entries(muscleSummary).map(([m, s]) => `${m} ${s} set`).join(' • ');
+      }
+
+      const templateId = builderState.editingTemplateId || `CUSTOM_${codeRaw}_${Date.now()}`;
+
+      const formattedExercises = validExercises.map(ex => {
+        const count = Math.min(10, Math.max(1, Number(ex.numSets) || 3));
+        const maxR = parseMaxReps(ex.targetReps);
+        const defW = Number(ex.defaultWeight) || 0;
+        const exId = ex.id || slugifyExerciseId(ex.name);
+
+        const sets = Array.from({ length: count }, (_, i) => ({
+          targetReps: ex.targetReps || '8-10',
+          maxReps: maxR,
+          defaultWeight: defW,
+          label: `Set ${i + 1}`
+        }));
+
+        return {
+          id: exId,
+          name: ex.name.trim(),
+          muscle: ex.muscle,
+          note: ex.note.trim(),
+          sets
+        };
+      });
+
+      state.templates[templateId] = {
+        id: templateId,
+        code: codeRaw,
+        gym: builderState.gym,
+        title,
+        subtitle: autoSub,
+        isCustom: builderState.editingTemplateId ? state.templates[templateId]?.isCustom ?? true : true,
+        exercises: formattedExercises
+      };
+
+      saveTemplatesToStorage();
+      state.gym = builderState.gym;
+      state.activeTemplateId = templateId;
+
+      closeBuilderModal();
+      renderWorkoutView();
+      if (state.activeTab === 'templates') renderTemplatesView();
+      showToast('Scheda salvata e pronta all'uso!', '✅');
+    }
+
+    // =========================================================================
+    // 6. VISTA GESTIONE SCHEDE (TAB 2)
+    // =========================================================================
+    function renderTemplatesView() {
+      const listEl = document.getElementById('templates-management-list');
+      const allTpls = Object.values(state.templates);
+
+      listEl.innerHTML = allTpls.map(tpl => {
+        const gymBadge = tpl.gym === 'caserma'
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-iosBlue/20 text-iosBlue border border-iosBlue/30">🎖️ Caserma</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-iosPurple/20 text-iosPurple border border-iosPurple/30">⚡ Metamorfosis</span>';
+
+        const totalSets = tpl.exercises.reduce((acc, e) => acc + e.sets.length, 0);
+        const exPreview = tpl.exercises.map(e => `${e.name} (${e.sets.length}x)`).join(' • ');
+
+        return `
+          <article class="bg-iosCard border border-iosBorder rounded-3xl p-4">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  ${gymBadge}
+                  <span class="text-[11px] font-semibold text-zinc-400">${totalSets} set totali</span>
+                </div>
+                <h3 class="text-base font-bold text-white">${tpl.title}</h3>
+                <p class="text-xs text-zinc-400">${tpl.subtitle || ''}</p>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="openBuilderModal('${tpl.gym}', '${tpl.id}')" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 text-zinc-200 text-xs font-bold active:scale-95">
+                  Modifica
+                </button>
+                <button onclick="deleteTemplate('${tpl.id}')" class="p-1.5 rounded-xl bg-iosRed/15 text-iosRed text-xs font-bold active:scale-95">
+                  ✕
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] text-zinc-500 line-clamp-2 bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 mb-3">
+              ${exPreview}
+            </p>
+            <button onclick="startWorkoutFromTemplate('${tpl.id}')" class="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition active:scale-95">
+              🏋️ Avvia questa seduta
+            </button>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function startWorkoutFromTemplate(tplId) {
+      const tpl = state.templates[tplId];
+      if (!tpl) return;
+      state.gym = tpl.gym;
+      state.activeTemplateId = tplId;
+      switchTab('workout');
+    }
+
+    function deleteTemplate(tplId) {
+      if (Object.keys(state.templates).length <= 1) {
+        showToast('Devi mantenere almeno una seduta', '⚠️');
+        return;
+      }
+      showConfirm(
+        'Elimina seduta dalla scheda?',
+        'La seduta verrà rimossa dall'elenco (lo storico già salvato resterà intatto).',
+        () => {
+          delete state.templates[tplId];
+          delete state.drafts[tplId];
+          saveTemplatesToStorage();
+          saveDraftsToStorage();
+          if (state.activeTemplateId === tplId) {
+            const first = Object.values(state.templates)[0];
+            state.activeTemplateId = first.id;
+            state.gym = first.gym;
+          }
+          renderTemplatesView();
+          renderWorkoutView();
+          showToast('Seduta rimossa', '🗑️');
+        }
+      );
+    }
+
+    // =========================================================================
+    // 7. INTERAZIONI INPUT SERIE, COPIA E SALVATAGGIO
+    // =========================================================================
+    function updateSetInput(exId, setIdx, field, value) {
+      const tpl = getActiveTemplate();
+      const draft = ensureDraftForTemplate(tpl);
+      if (!draft.exercises[exId][setIdx]) return;
+      draft.exercises[exId][setIdx][field] = value === '' ? '' : Number(value);
+      saveDraftsToStorage();
+      renderWorkoutView();
+    }
+
+    function toggleSetDone(exId, setIdx) {
+      const tpl = getActiveTemplate();
+      const draft = ensureDraftForTemplate(tpl);
+      const setObj = draft.exercises[exId][setIdx];
+      const metaSet = tpl.exercises.find(e => e.id === exId).sets[setIdx];
+
+      if (!setObj.done && (setObj.reps === '' || setObj.reps === null)) {
+        setObj.reps = metaSet.maxReps;
+      }
+      setObj.done = !setObj.done;
+      saveDraftsToStorage();
+      renderWorkoutView();
+
+      if (setObj.done) {
+        const restSeconds = exId.includes('alzate_lat') ? 60 : 90;
+        startTimer(restSeconds);
+      }
+    }
+
+    function copyExerciseLast(exId) {
+      const tpl = getActiveTemplate();
+      const draft = ensureDraftForTemplate(tpl);
+      const last = getLastPerformance(exId);
+      if (!last) return;
+
+      draft.exercises[exId] = draft.exercises[exId].map((s, idx) => {
+        const l = last.sets[idx] || last.sets[last.sets.length - 1];
+        return {
+          weight: l ? l.weight : s.weight,
+          reps: l ? l.reps : s.reps,
+          done: false
+        };
+      });
+      saveDraftsToStorage();
+      renderWorkoutView();
+      showToast('Valori ultima seduta copiati', '📋');
+    }
+
+    function copyAllLastWorkout() {
+      const tpl = getActiveTemplate();
+      const draft = ensureDraftForTemplate(tpl);
+      let copiedCount = 0;
+
+      tpl.exercises.forEach(ex => {
+        const last = getLastPerformance(ex.id);
+        if (last) {
+          copiedCount++;
+          draft.exercises[ex.id] = draft.exercises[ex.id].map((s, idx) => {
+            const l = last.sets[idx] || last.sets[last.sets.length - 1];
+            return {
+              weight: l ? l.weight : s.weight,
+              reps: l ? l.reps : s.reps,
+              done: false
+            };
+          });
+        }
+      });
+
+      saveDraftsToStorage();
+      renderWorkoutView();
+      showToast(copiedCount > 0 ? 'Carichi e rep copiati!' : 'Nessuno storico precedente trovato', copiedCount > 0 ? '⚡' : 'ℹ️');
+    }
+
+    function resetCurrentInputs() {
+      showConfirm(
+        'Resetta seduta corrente?',
+        'Verranno svuotate le ripetizioni inserite oggi per questa seduta.',
+        () => {
+          const tpl = getActiveTemplate();
+          delete state.drafts[tpl.id];
+          saveDraftsToStorage();
+          renderWorkoutView();
+          showToast('Seduta resettata', '🔄');
+        }
+      );
+    }
+
+    function saveCurrentWorkout() {
+      const tpl = getActiveTemplate();
+      const draft = ensureDraftForTemplate(tpl);
+      draft.notes = document.getElementById('workout-notes').value.trim();
+
+      const recordedExercises = [];
+      tpl.exercises.forEach(ex => {
+        const dSets = draft.exercises[ex.id] || [];
+        const validSets = dSets
+          .filter(s => Number(s.reps) > 0)
+          .map(s => ({
+            weight: Number(s.weight) || 0,
+            reps: Number(s.reps),
+            done: true
+          }));
+
+        if (validSets.length > 0) {
+          recordedExercises.push({
+            id: ex.id,
+            name: ex.name,
+            muscle: ex.muscle,
+            sets: validSets
+          });
+        }
+      });
+
+      if (recordedExercises.length === 0) {
+        showToast('Inserisci almeno una serie con ripetizioni!', '⚠️');
+        return;
+      }
+
+      const workoutEntry = {
+        id: 'w_' + Date.now(),
+        date: new Date().toISOString(),
+        templateId: tpl.id,
+        gym: state.gym,
+        code: tpl.code,
+        title: tpl.title,
+        notes: draft.notes,
+        exercises: recordedExercises
+      };
+
+      state.history.push(workoutEntry);
+      saveHistoryToStorage();
+
+      delete state.drafts[tpl.id];
+      saveDraftsToStorage();
+      stopTimer();
+
+      renderWorkoutView();
+      showToast('Allenamento salvato nello storico!', '✅');
+    }
+
+    // =========================================================================
+    // 8. TIMER RECUPERO
+    // =========================================================================
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      timerSecondsLeft = seconds;
+      document.getElementById('timer-bar').classList.remove('hidden');
+      updateTimerDisplay();
+
+      timerInterval = setInterval(() => {
+        timerSecondsLeft--;
+        if (timerSecondsLeft <= 0) {
+          clearInterval(timerInterval);
+          timerSecondsLeft = 0;
+          updateTimerDisplay();
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          showToast('Recupero terminato! Vai col prossimo set', '🔔');
+          setTimeout(() => stopTimer(), 2500);
+        } else {
+          updateTimerDisplay();
+        }
+      }, 1000);
+    }
+
+    function adjustTimer(delta) {
+      timerSecondsLeft = Math.max(5, timerSecondsLeft + delta);
+      updateTimerDisplay();
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      document.getElementById('timer-bar').classList.add('hidden');
+    }
+
+    function updateTimerDisplay() {
+      const m = Math.floor(timerSecondsLeft / 60).toString().padStart(2, '0');
+      const s = (timerSecondsLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timer-display').textContent = `${m}:${s}`;
+    }
+
+    // =========================================================================
+    // 9. VISTA PROGRESSI, VOLUME SETTIMANALE & GRAFICI CANVAS
+    // =========================================================================
+    function renderProgressView() {
+      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const recentWorkouts = state.history.filter(w => new Date(w.date).getTime() >= sevenDaysAgo);
+
+      document.getElementById('weekly-workouts-count').textContent = `${recentWorkouts.length} sedute`;
+
+      const volCounts = { Petto: 0, Dorso: 0, Spalle: 0, Bicipiti: 0, Tricipiti: 0, Gambe: 0, Addome: 0 };
+      recentWorkouts.forEach(w => {
+        w.exercises.forEach(ex => {
+          if (volCounts.hasOwnProperty(ex.muscle)) {
+            volCounts[ex.muscle] += ex.sets.length;
+          }
+        });
+      });
+
+      const barsEl = document.getElementById('weekly-volume-bars');
+      const activeMuscles = Object.keys(WEEKLY_VOLUME_TARGETS).filter(m =>
+        ['Petto', 'Dorso', 'Spalle', 'Bicipiti', 'Tricipiti'].includes(m) || volCounts[m] > 0
+      );
+
+      barsEl.innerHTML = activeMuscles.map(muscle => {
+        const done = volCounts[muscle] || 0;
+        const target = WEEKLY_VOLUME_TARGETS[muscle] || 12;
+        const pct = Math.min(100, Math.round((done / target) * 100));
+        const barColor = pct >= 100 ? 'bg-iosGreen' : pct >= 50 ? 'bg-iosBlue' : 'bg-iosOrange';
+
+        return `
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span class="text-zinc-200">${muscle}</span>
+              <span class="text-zinc-400"><strong class="text-white">${done}</strong> / ${target} set</span>
+            </div>
+            <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/80">
+              <div class="h-full ${barColor} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const selectEl = document.getElementById('chart-exercise-select');
+      const currentVal = selectEl.value;
+      const exerciseMap = new Map();
+
+      Object.values(state.templates).forEach(tpl => {
+        tpl.exercises.forEach(ex => {
+          if (!exerciseMap.has(ex.id)) {
+            exerciseMap.set(ex.id, `${ex.name} (${ex.muscle})`);
+          }
+        });
+      });
+
+      state.history.forEach(w => {
+        w.exercises.forEach(ex => {
+          if (!exerciseMap.has(ex.id)) {
+            exerciseMap.set(ex.id, `${ex.name} (${ex.muscle})`);
+          }
+        });
+      });
+
+      selectEl.innerHTML = Array.from(exerciseMap.entries()).map(([id, label]) =>
+        `<option value="${id}">${label}</option>`
+      ).join('');
+
+      if (currentVal && exerciseMap.has(currentVal)) {
+        selectEl.value = currentVal;
+      }
+
+      renderExerciseChart();
+    }
+
+    function renderExerciseChart() {
+      const exId = document.getElementById('chart-exercise-select').value;
+      const points = [];
+
+      state.history.forEach(w => {
+        const found = w.exercises.find(e => e.id === exId);
+        if (found && found.sets.length > 0) {
+          let maxW = 0;
+          let max1RM = 0;
+          let bestSetStr = '';
+
+          found.sets.forEach(s => {
+            const weight = Number(s.weight) || 0;
+            const reps = Number(s.reps) || 0;
+            const est1RM = reps > 1 ? weight * (1 + reps / 30) : weight;
+            if (weight >= maxW) {
+              maxW = weight;
+              bestSetStr = `${weight}x${reps}`;
+            }
+            if (est1RM > max1RM) {
+              max1RM = est1RM;
+            }
+          });
+
+          points.push({
+            dateLabel: new Date(w.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+            maxW: Math.round(maxW * 10) / 10,
+            max1RM: Math.round(max1RM * 10) / 10,
+            bestSetStr
+          });
+        }
+      });
+
+      if (points.length > 0) {
+        const topW = Math.max(...points.map(p => p.maxW));
+        const top1RM = Math.max(...points.map(p => p.max1RM));
+        const latestBest = points[points.length - 1].bestSetStr;
+
+        document.getElementById('kpi-max-weight').textContent = `${topW} kg`;
+        document.getElementById('kpi-est-1rm').textContent = `${top1RM} kg`;
+        document.getElementById('kpi-best-set').textContent = latestBest;
+      } else {
+        document.getElementById('kpi-max-weight').textContent = '—';
+        document.getElementById('kpi-est-1rm').textContent = '—';
+        document.getElementById('kpi-best-set').textContent = '—';
+      }
+
+      drawResponsiveCanvasChart(points);
+    }
+
+    function drawResponsiveCanvasChart(points) {
+      const wrapper = document.getElementById('chart-wrapper');
+      const canvas = document.getElementById('progress-canvas');
+      if (!wrapper || !canvas) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = wrapper.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      if (points.length === 0) {
+        ctx.fillStyle = '#71717a';
+        ctx.font = '500 13px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Nessun dato registrato per questo esercizio', rect.width / 2, rect.height / 2);
+        return;
+      }
+
+      const padLeft = 36;
+      const padRight = 16;
+      const padTop = 18;
+      const padBottom = 26;
+      const plotW = rect.width - padLeft - padRight;
+      const plotH = rect.height - padTop - padBottom;
+
+      const allVals = points.flatMap(p => [p.maxW, p.max1RM]);
+      let minVal = Math.min(...allVals);
+      let maxVal = Math.max(...allVals);
+      if (minVal === maxVal) {
+        minVal = Math.max(0, minVal - 5);
+        maxVal = maxVal + 5;
+      } else {
+        const margin = (maxVal - minVal) * 0.15;
+        minVal = Math.max(0, minVal - margin);
+        maxVal = maxVal + margin;
+      }
+
+      const getX = (idx) => {
+        if (points.length === 1) return padLeft + plotW / 2;
+        return padLeft + (idx / (points.length - 1)) * plotW;
+      };
+      const getY = (val) => padTop + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
+
+      ctx.strokeStyle = '#27272a';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#71717a';
+      ctx.font = '600 10px Inter, sans-serif';
+      ctx.textAlign = 'right';
+
+      for (let i = 0; i <= 3; i++) {
+        const val = minVal + ((maxVal - minVal) / 3) * i;
+        const y = getY(val);
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(rect.width - padRight, y);
+        ctx.stroke();
+        ctx.fillText(Math.round(val), padLeft - 6, y + 3);
+      }
+
+      ctx.save();
+      ctx.strokeStyle = '#30d158';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      points.forEach((p, idx) => {
+        const x = getX(idx);
+        const y = getY(p.max1RM);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.strokeStyle = '#0a84ff';
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      points.forEach((p, idx) => {
+        const x = getX(idx);
+        const y = getY(p.maxW);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      points.forEach((p, idx) => {
+        const x = getX(idx);
+        const yW = getY(p.maxW);
+        const y1 = getY(p.max1RM);
+
+        ctx.fillStyle = '#30d158';
+        ctx.beginPath();
+        ctx.arc(x, y1, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0a84ff';
+        ctx.beginPath();
+        ctx.arc(x, yW, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#09090b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#a1a1aa';
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.dateLabel, x, rect.height - 6);
+      });
+    }
+
+    // =========================================================================
+    // 10. VISTA STORICO & BACKUP JSON / TESTO NOTE
+    // =========================================================================
+    function renderHistoryView() {
+      const listEl = document.getElementById('history-list');
+      if (state.history.length === 0) {
+        listEl.innerHTML = `
+          <div class="bg-iosCard border border-iosBorder rounded-3xl p-8 text-center">
+            <p class="text-sm text-zinc-400">Nessun allenamento salvato finora.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const sorted = [...state.history].reverse();
+      listEl.innerHTML = sorted.map(w => {
+        const dateStr = new Date(w.date).toLocaleDateString('it-IT', {
+          weekday: 'short', day: '2-digit', month: '2-digit', year: '2-digit'
+        });
+        const badgeColor = w.gym === 'metamorfosis'
+          ? 'bg-iosPurple/20 text-iosPurple border-iosPurple/30'
+          : 'bg-iosBlue/20 text-iosBlue border-iosBlue/30';
+
+        const exLines = w.exercises.map(ex => {
+          const setsStr = ex.sets.map(s => `${s.weight}x${s.reps}`).join('+');
+          return `<div class="flex justify-between text-xs py-1 border-b border-zinc-800/60 last:border-0">
+            <span class="text-zinc-300 font-medium truncate pr-2">${ex.name}</span>
+            <span class="text-white font-bold font-mono shrink-0">${setsStr}</span>
+          </div>`;
+        }).join('');
+
+        return `
+          <article class="bg-iosCard border border-iosBorder rounded-3xl p-4">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-lg border ${badgeColor}">${w.title}</span>
+                <span class="text-xs text-zinc-400 font-medium">${dateStr}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="copyWorkoutAsText('${w.id}')" title="Copia stile Note iPhone" class="px-2.5 py-1 rounded-xl bg-zinc-800 text-zinc-200 text-[11px] font-bold active:scale-95">
+                  Copia Note
+                </button>
+                <button onclick="deleteWorkout('${w.id}')" title="Elimina" class="p-1.5 rounded-xl bg-iosRed/15 text-iosRed text-xs font-bold active:scale-95">
+                  ✕
+                </button>
+              </div>
+            </div>
+            ${w.notes ? `<p class="text-xs text-iosOrange bg-iosOrange/10 px-2.5 py-1.5 rounded-xl mb-2.5">📝 ${w.notes}</p>` : ''}
+            <div class="bg-zinc-950/90 border border-zinc-800/80 rounded-2xl px-3 py-1.5">
+              ${exLines}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function copyWorkoutAsText(workoutId) {
+      const w = state.history.find(item => item.id === workoutId);
+      if (!w) return;
+
+      const d = new Date(w.date);
+      const dayMonth = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const gymTag = w.gym === 'metamorfosis' ? ' metamorfosis' : '';
+      const lines = [`${dayMonth}${gymTag} (${w.code})`];
+
+      w.exercises.forEach(ex => {
+        const setsStr = ex.sets.map(s => `${s.weight}x${s.reps}`).join('+');
+        lines.push(`${ex.name.toLowerCase()} ${setsStr}`);
+      });
+      if (w.notes) lines.push(`note: ${w.notes}`);
+
+      const textToCopy = lines.join('\n');
+      const tempArea = document.createElement('textarea');
+      tempArea.value = textToCopy;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempArea);
+
+      showToast('Copiato in formato Note iPhone!', '📋');
+    }
+
+    function deleteWorkout(workoutId) {
+      showConfirm(
+        'Elimina allenamento?',
+        'Questa seduta verrà rimossa definitivamente dallo storico e dai grafici.',
+        () => {
+          state.history = state.history.filter(w => w.id !== workoutId);
+          saveHistoryToStorage();
+          renderHistoryView();
+          showToast('Allenamento eliminato', '🗑️');
+        }
+      );
+    }
+
+    function exportBackupJSON() {
+      const dataStr = JSON.stringify({
+        app: 'IronTrack_iOS',
+        exportedAt: new Date().toISOString(),
+        templates: state.templates,
+        history: state.history
+      }, null, 2);
+
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const today = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `IronTrack_Backup_${today}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Backup JSON scaricato!', '⬇️');
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && Array.isArray(parsed.history)) {
+            state.history = parsed.history;
+            saveHistoryToStorage();
+            if (parsed.templates && typeof parsed.templates === 'object') {
+              state.templates = parsed.templates;
+              saveTemplatesToStorage();
+            }
+            renderHistoryView();
+            renderTemplatesView();
+            renderWorkoutView();
+            showToast(`Ripristinati ${parsed.history.length} allenamenti!`, '✅');
+          } else {
+            showToast('File di backup non valido', '⚠️');
+          }
+        } catch (err) {
+          showToast('Errore lettura file JSON', '⚠️');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    // =========================================================================
+    // 11. NAVIGAZIONE TAB & UI HELPERS
+    // =========================================================================
+    function switchTab(tab) {
+      state.activeTab = tab;
+      ['workout', 'templates', 'progress', 'history'].forEach(t => {
+        const viewEl = document.getElementById(`view-${t}`);
+        const tabBtn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          viewEl.classList.remove('hidden');
+          tabBtn.classList.remove('text-zinc-500');
+          tabBtn.classList.add('text-iosBlue');
+        } else {
+          viewEl.classList.add('hidden');
+          tabBtn.classList.remove('text-iosBlue');
+          tabBtn.classList.add('text-zinc-500');
+        }
+      });
+
+      if (tab === 'templates') renderTemplatesView();
+      if (tab === 'progress') renderProgressView();
+      if (tab === 'history') renderHistoryView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    let toastTimeout = null;
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+
+      toast.classList.remove('opacity-0', '-translate-y-4');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-4');
+      }, 2600);
+    }
+
+    function showConfirm(title, desc, onConfirm) {
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-desc').textContent = desc;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const close = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      document.getElementById('confirm-cancel').onclick = close;
+      document.getElementById('confirm-ok').onclick = () => {
+        close();
+        onConfirm();
+      };
+    }
+
+    function openPwaModal() {
+      const m = document.getElementById('pwa-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closePwaModal() {
+      const m = document.getElementById('pwa-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function setupDynamicPWA() {
+      const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#09090b"/><path d="M128 200h40v112h-40zm216 0h40v112h-40zM88 224h32v64H88zm304 0h32v64h-32zM176 240h160v32H176z" fill="#0a84ff"/></svg>`;
+      const iconDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon);
+
+      const appleIconLink = document.createElement('link');
+      appleIconLink.rel = 'apple-touch-icon';
+      appleIconLink.href = iconDataUri;
+      document.head.appendChild(appleIconLink);
+
+      const manifest = {
+        name: 'IronTrack — Scheda & Progressi',
+        short_name: 'IronTrack',
+        start_url: '.',
+        display: 'standalone',
+        background_color: '#09090b',
+        theme_color: '#09090b',
+        icons: [
+          {
+            src: iconDataUri,
+            sizes: '512x512',
+            type: 'image/svg+xml'
+          }
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = URL.createObjectURL(manifestBlob);
+      document.head.appendChild(manifestLink);
+    }
+
+    window.addEventListener('resize', () => {
+      if (state.activeTab === 'progress') {
+        renderExerciseChart();
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setupDynamicPWA();
+      loadState();
+      renderWorkoutView();
+    });
+  </script>
+</body>
+</html>
